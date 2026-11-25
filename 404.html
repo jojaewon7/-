@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>빈차 찾기 (주소 이동)</title>
+<meta http-equiv="refresh" content="0; url=https://bincha-finder.vercel.app/">
+<link rel="canonical" href="https://bincha-finder.vercel.app/">
+<script>
+  // 예전 주소에 남은 오프라인 저장본을 지우고 새 주소로 이동
+  try { navigator.serviceWorker && navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())); } catch (e) {}
+  location.replace("https://bincha-finder.vercel.app/" + location.hash);
+</script>
+<style>body{font:18px/1.6 system-ui,sans-serif;margin:0;padding:40px 20px;text-align:center;background:#eef1f5;color:#141a24}a{color:#d7262e;font-weight:700}</style>
+</head>
+<body>
+<p>빈차 찾기가 새 주소로 옮겼어요.</p>
+<p><a href="https://bincha-finder.vercel.app/">bincha-finder.vercel.app 으로 이동</a></p>
+</body>
+</html>
