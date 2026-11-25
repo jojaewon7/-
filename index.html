@@ -92,6 +92,7 @@ footer{font-size:12px;color:var(--muted)}
       <button class="chip" data-k="공항" aria-pressed="false">공항</button>
       <button class="chip" data-k="터미널" aria-pressed="false">터미널</button>
       <button class="chip" data-k="번화가" aria-pressed="false">번화가</button>
+      <button class="chip" data-k="기사대기" aria-pressed="false">기사 선호 대기</button>
     </div>
   </section>
 
@@ -126,7 +127,7 @@ footer{font-size:12px;color:var(--muted)}
   </section>
 
   <footer id="foot">
-    실시간 택시 위치가 아니라 장소 종류와 시간대로 추정한 결과예요. 장소 좌표는 근사값이니 길찾기 링크로 확인하세요.
+    실시간 택시 위치가 아니라 장소 종류와 시간대로 추정한 결과예요. 기사 선호 대기장소는 손님이 꾸준해서 기사들이 승강장에 줄 서 기다리는 곳이에요. 장소 좌표는 근사값이니 길찾기 링크로 확인하세요.
   </footer>
 </div>
 
@@ -171,8 +172,29 @@ const P = [
  ["해운대역","번화가","부산",35.1631,129.1590],["동성로(반월당)","번화가","대구",35.8650,128.5935],
  ["대전 둔산동","번화가","대전",36.3504,127.3845],["광주 상무지구","번화가","광주",35.1520,126.8530],
  ["울산 삼산동","번화가","울산",35.5390,129.3380],["전주 객사","번화가","전주",35.8190,127.1460],
- ["제주 연동·노형","번화가","제주",33.4890,126.4830]
+ ["제주 연동·노형","번화가","제주",33.4890,126.4830],
+ // 기사들이 선호하는 대기장소: [이름, "기사대기", 도시, 위도, 경도, 유형]
+ ["서울아산병원","기사대기","서울",37.5267,127.1082,"병원"],["삼성서울병원","기사대기","서울",37.4881,127.0855,"병원"],
+ ["세브란스병원","기사대기","서울",37.5622,126.9408,"병원"],["서울대병원","기사대기","서울",37.5796,126.9990,"병원"],
+ ["서울성모병원","기사대기","서울",37.5016,127.0049,"병원"],["고려대안암병원","기사대기","서울",37.5872,127.0264,"병원"],
+ ["분당서울대병원","기사대기","경기",37.3520,127.1234,"병원"],["부산대병원","기사대기","부산",35.1007,129.0175,"병원"],
+ ["경북대병원","기사대기","대구",35.8665,128.6046,"병원"],["전남대병원","기사대기","광주",35.1416,126.9214,"병원"],
+ ["충남대병원","기사대기","대전",36.3171,127.4152,"병원"],
+ ["롯데호텔서울","기사대기","서울",37.5653,126.9810,"호텔"],["서울신라호텔","기사대기","서울",37.5560,127.0057,"호텔"],
+ ["그랜드하얏트서울","기사대기","서울",37.5394,126.9970,"호텔"],["롯데호텔부산","기사대기","부산",35.1567,129.0563,"호텔"],
+ ["파라다이스호텔부산","기사대기","부산",35.1600,129.1650,"호텔"],
+ ["코엑스","기사대기","서울",37.5115,127.0595,"컨벤션"],["킨텍스","기사대기","경기",37.6688,126.7451,"컨벤션"],
+ ["벡스코","기사대기","부산",35.1690,129.1361,"컨벤션"],["엑스코","기사대기","대구",35.9068,128.6131,"컨벤션"],
+ ["김대중컨벤션센터","기사대기","광주",35.1467,126.8410,"컨벤션"],
+ ["롯데월드몰","기사대기","서울",37.5126,127.1025,"백화점"],["더현대서울","기사대기","서울",37.5259,126.9284,"백화점"],
+ ["현대백화점 판교","기사대기","경기",37.3925,127.1120,"백화점"],["신세계 센텀시티","기사대기","부산",35.1689,129.1294,"백화점"]
 ];
+const WHY={
+ "병원":"외래 환자·보호자 손님이 하루 종일 꾸준해서 기사들이 정문 택시 승강장에 줄 서서 기다려요.",
+ "호텔":"공항·장거리 손님이 많아 기사들이 선호해요. 정문 앞 택시 대기열을 확인하세요.",
+ "컨벤션":"전시·행사가 끝나는 시간에 기사들이 미리 몰려와 대기해요.",
+ "백화점":"폐점 시간(보통 20~21시) 앞뒤로 짐 많은 손님을 노리고 택시가 모여요."
+};
 const CITY = {"서울":[37.5547,126.9707],"부산":[35.1151,129.0422],"대구":[35.8793,128.6286],"인천":[37.4424,126.7015],
  "광주":[35.1601,126.8789],"대전":[36.3323,127.4344],"울산":[35.5390,129.3380],"경기(수원)":[37.2659,127.0000],
  "청주":[36.6262,127.4320],"전주":[35.8190,127.1460],"강원(강릉)":[37.7643,128.8996],"제주":[33.4990,126.5160]};
@@ -182,7 +204,13 @@ let filter = "all";
 const $ = id => document.getElementById(id);
 
 // 시간대별 '택시 대기 가능성' (0~1)
-function timeScore(kind,h){
+function timeScore(kind,h,sub){
+  if(kind==="기사대기"){
+    if(sub==="병원") return h>=8&&h<18?1:(h>=18&&h<21?.55:.2);
+    if(sub==="호텔") return h>=6&&h<11?1:(h>=11&&h<24?.8:.4);
+    if(sub==="컨벤션") return h>=10&&h<19?.8:.2;
+    if(sub==="백화점") return h>=19&&h<22?1:(h>=11&&h<19?.7:.1);
+  }
   if(kind==="공항") return h>=6&&h<23?1:(h>=23||h<1?.6:.15);
   if(kind==="역") return h>=6&&h<24?(h>=7&&h<10||h>=17&&h<23?1:.8):(h<1?.5:.1);
   if(kind==="터미널") return h>=6&&h<23?.85:.15;
@@ -190,7 +218,8 @@ function timeScore(kind,h){
   if(h>=21||h<3) return 1; if(h>=17) return .7; if(h>=3&&h<6) return .4; return .45;
 }
 function level(s){return s>=.8?["hi","많을 가능성 높음"]:s>=.45?["mid","보통"]:["lo","적음"]}
-function tip(kind,h){
+function tip(kind,h,sub){
+  if(kind==="기사대기") return WHY[sub]||"";
   if(kind==="공항") return h>=6&&h<23?"도착층 택시 승강장에 대기 줄이 있어요.":"심야엔 항공편이 끊겨 대기 택시가 적어요.";
   if(kind==="역") return h<6?"막차 이후라 대기 택시가 거의 없어요.":"역 앞 택시 승강장에 줄 서 있는 빈차를 노리세요.";
   if(kind==="터미널") return h>=23||h<6?"막차 이후 대기 택시가 줄어요.":"터미널 승강장에 빈차가 대기해요.";
@@ -207,7 +236,7 @@ function walkTxt(k){return k<1.5?"도보 "+Math.max(1,Math.round(k/0.075))+"분"
 function render(){
   const h=new Date().getHours();
   const rows=P.filter(p=>filter==="all"||p[1]===filter).map(p=>{
-    const d=km(here.lat,here.lng,p[3],p[4]), s=timeScore(p[1],h);
+    const d=km(here.lat,here.lng,p[3],p[4]), s=timeScore(p[1],h,p[5]);
     // 가까움과 시간대 점수를 함께 반영
     return {p,d,s,rank:d/(0.3+s)};
   }).sort((a,b)=>a.rank-b.rank).slice(0,8);
@@ -220,11 +249,11 @@ function render(){
       <div class="meta"><span class="pill ${cls}"></span><span class="tip"></span></div>
       <div class="links"><a target="_blank" rel="noopener">카카오맵 길찾기</a><a target="_blank" rel="noopener">네이버지도</a><button type="button">여기 기준으로</button></div>`;
     li.querySelector(".name").textContent=(i===0?"추천 · ":"")+name;
-    li.querySelector(".kind").textContent=kind+" · "+r.p[2];
+    li.querySelector(".kind").textContent=(kind==="기사대기"?"기사 선호 대기 · "+r.p[5]:kind)+" · "+r.p[2];
     li.querySelector(".dist").textContent=fmtKm(r.d);
     li.querySelector(".dir").textContent=[dir(here.lat,here.lng,lat,lng),walkTxt(r.d)].filter(Boolean).join(" · ");
     li.querySelector(".pill").textContent="택시 "+txt;
-    li.querySelector(".tip").textContent=tip(kind,h);
+    li.querySelector(".tip").textContent=tip(kind,h,r.p[5]);
     const a=li.querySelectorAll("a");
     a[0].href="https://map.kakao.com/link/to/"+encodeURIComponent(name)+","+lat+","+lng;
     a[1].href="https://map.naver.com/v5/search/"+encodeURIComponent(name);
