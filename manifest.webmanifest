@@ -1,0 +1,16 @@
+{
+  "name": "빈차 찾기",
+  "short_name": "빈차 찾기",
+  "description": "급할 때 빈 택시가 모여 있을 만한 곳을 가까운 순으로 알려줘요.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef1f5",
+  "theme_color": "#d7262e",
+  "lang": "ko",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
